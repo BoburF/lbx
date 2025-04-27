@@ -9,6 +9,7 @@ import (
 )
 
 type httpServer struct {
+	Force        int
 	url          *url.URL
 	alive        bool
 	mux          sync.RWMutex
@@ -61,10 +62,11 @@ func (s *httpServer) handler(w http.ResponseWriter, r *http.Request) {
 	s.reverseProxy.ServeHTTP(w, r)
 }
 
-func NewHttpServer(url *url.URL, rp *httputil.ReverseProxy) httpServer {
-	return httpServer{
+func NewHttpServer(url *url.URL, force int) Server {
+	return &httpServer{
 		url:          url,
 		alive:        true,
-		reverseProxy: rp,
+		reverseProxy: httputil.NewSingleHostReverseProxy(url),
+		Force:        force,
 	}
 }
