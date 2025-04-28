@@ -1,0 +1,62 @@
+package lb
+
+import (
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"time"
+
+	"github.com/BoburF/lbx/proxy"
+)
+
+type LoadBalancer struct {
+	proxyPool ProxyPool
+}
+
+func NewLoadBalancer(servers []Server, retryTimeSecond int) LoadBalancer {
+	pool := make([]*proxy.HttpProxy, 0)
+
+	for _, server := range servers {
+		for range server.GetForce() {
+			pool = append(pool, &proxy.HttpProxy{
+				Adress: server.adrress,
+			})
+		}
+	}
+
+	pp := NewProxyPool(pool, retryTimeSecond)
+	return LoadBalancer{
+		proxyPool: *pp,
+	}
+}
+
+func (lb *LoadBalancer) Server(host string, port int) error {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", lb.handle)
+
+	server := &http.Server{
+		Addr:         net.JoinHostPort(host, itoa(port)),
+		Handler:      mux,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Printf("Load balancer listening on %s:%s", host, port)
+	return server.ListenAndServe()
+}
+
+func (lb *LoadBalancer) handle(w http.ResponseWriter, r *http.Request) {
+	proxy, err := lb.proxyPool.Next()
+	if err != nil {
+		http.Error(w, "No available proxy", http.StatusServiceUnavailable)
+		return
+	}
+
+	proxy.HandleRequest(w, r)
+}
+
+func itoa(n int) string {
+	return fmt.Sprint(n)
+}

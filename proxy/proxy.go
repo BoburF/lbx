@@ -9,8 +9,7 @@ import (
 )
 
 type HttpProxy struct {
-	adress      url.URL
-	force       int
+	Adress      url.URL
 	connections int
 	rmx         sync.RWMutex
 	isAlive     bool
@@ -25,16 +24,16 @@ func (hp *HttpProxy) GetConnection() int {
 	return hp.connections
 }
 
-func (hp *HttpProxy) GetForce() int {
-	return hp.force
-}
-
 func (hp *HttpProxy) GetAdress() string {
-	return hp.adress.RequestURI()
+	return hp.Adress.RequestURI()
 }
 
 func (hp *HttpProxy) SetAlive(isAlive bool) {
 	hp.isAlive = isAlive
+}
+
+func (hp *HttpProxy) GetStatusIsAlive() bool {
+	return hp.isAlive
 }
 
 func (hp *HttpProxy) IsAlive() bool {
