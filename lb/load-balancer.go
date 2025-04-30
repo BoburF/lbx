@@ -5,8 +5,10 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 
+	"github.com/BoburF/lbx/config"
 	"github.com/BoburF/lbx/proxy"
 )
 
@@ -14,7 +16,17 @@ type LoadBalancer struct {
 	proxyPool ProxyPool
 }
 
-func NewLoadBalancer(servers []Server, retryTimeSecond int) LoadBalancer {
+func NewLoadBalancer(serverConfigs []config.ServerConfig, retryTimeSecond int) (LoadBalancer, error) {
+	servers := make([]Server, 0)
+
+	for _, serverConfig := range serverConfigs {
+		parsedUrl, err := url.Parse(serverConfig.Adress)
+		if err != nil {
+			return LoadBalancer{}, err
+		}
+		servers = append(servers, Server{adrress: *parsedUrl, force: serverConfig.Force})
+	}
+
 	pool := make([]*proxy.HttpProxy, 0)
 
 	for _, server := range servers {
@@ -28,7 +40,7 @@ func NewLoadBalancer(servers []Server, retryTimeSecond int) LoadBalancer {
 	pp := NewProxyPool(pool, retryTimeSecond)
 	return LoadBalancer{
 		proxyPool: *pp,
-	}
+	}, nil
 }
 
 func (lb *LoadBalancer) Server(host string, port int) error {
@@ -43,7 +55,7 @@ func (lb *LoadBalancer) Server(host string, port int) error {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	log.Printf("Load balancer listening on %s:%s", host, port)
+	log.Printf("Load balancer listening on %s:%d", host, port)
 	return server.ListenAndServe()
 }
 

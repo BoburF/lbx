@@ -1,7 +1,9 @@
 {
+  "port": 3000,
+  "retryTimeInMinutes": 2,
   "servers": [
     {
-      "address": "localhost:5000",
+      "adress": "localhost:5000",
       "force": 5
     }
   ]
