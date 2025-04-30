@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"time"
 
@@ -31,9 +32,23 @@ func NewLoadBalancer(serverConfigs []config.ServerConfig, retryTimeSecond int) (
 
 	for _, server := range servers {
 		for range server.GetForce() {
-			pool = append(pool, &proxy.HttpProxy{
-				Adress: server.adrress,
-			})
+			target := server.GetAdress()
+			localTarget := target
+
+			rp := httputil.NewSingleHostReverseProxy(&localTarget)
+			rp.Director = func(req *http.Request) {
+				req.URL.Scheme = target.Scheme
+				req.URL.Host = target.Host
+				req.Host = target.Host
+			}
+
+			proxy := proxy.HttpProxy{
+				Adress: target,
+				Proxy:  *rp,
+			}
+			proxy.SetAlive(true)
+
+			pool = append(pool, &proxy)
 		}
 	}
 

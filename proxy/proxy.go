@@ -12,12 +12,12 @@ type HttpProxy struct {
 	Adress      url.URL
 	connections int
 	rmx         sync.RWMutex
-	isAlive     bool
-	proxy       httputil.ReverseProxy
+	Alive       bool
+	Proxy       httputil.ReverseProxy
 }
 
 func (hp *HttpProxy) HandleRequest(w http.ResponseWriter, r *http.Request) {
-	hp.proxy.ServeHTTP(w, r)
+	hp.Proxy.ServeHTTP(w, r)
 }
 
 func (hp *HttpProxy) GetConnection() int {
@@ -25,15 +25,15 @@ func (hp *HttpProxy) GetConnection() int {
 }
 
 func (hp *HttpProxy) GetAdress() string {
-	return hp.Adress.RequestURI()
+	return hp.Adress.String()
 }
 
 func (hp *HttpProxy) SetAlive(isAlive bool) {
-	hp.isAlive = isAlive
+	hp.Alive = isAlive
 }
 
 func (hp *HttpProxy) GetStatusIsAlive() bool {
-	return hp.isAlive
+	return hp.Alive
 }
 
 func (hp *HttpProxy) IsAlive() bool {

@@ -3,7 +3,7 @@
   "retryTimeInMinutes": 2,
   "servers": [
     {
-      "adress": "localhost:5000",
+      "adress": "http://localhost:2000",
       "force": 5
     }
   ]
